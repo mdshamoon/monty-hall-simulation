@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Monty Hall Problem Real-time Line Chart</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <canvas id="chart"></canvas>
+  <button id="resetBtn">Reset Chart</button>
+
+  <script>
+    // Create a new Chart.js line chart
+    const ctx = document.getElementById('chart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: 'Switching',
+            data: [],
+            borderColor: 'blue',
+            fill: false
+          },
+          {
+            label: 'Staying',
+            data: [],
+            borderColor: 'green',
+            fill: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            display: true,
+            title: {
+              display: true,
+              text: 'Iteration'
+            }
+          },
+          y: {
+            display: true,
+            title: {
+              display: true,
+              text: 'Probability (%)'
+            },
+            suggestedMin: 0,
+            suggestedMax: 100
+          }
+        }
+      }
+    });
+    let i = 0
+    let switchWins = 0;
+    let stayWins = 0;
+    let probabilitiesSwitching = [];
+    let probabilitiesStaying = [];
+
+    // Function to simulate the Monty Hall problem and update the chart
+    async function simulateMontyHallRealTime(numSimulations) {
+
+      for (; i < numSimulations; i++) {
+        // Randomly assign a door for the car
+        const carDoor = Math.floor(Math.random() * 3);
+
+        // Contestant's initial choice
+        const initialChoice = Math.floor(Math.random() * 3);
+
+        // Host reveals a door with a goat
+        let revealedDoor;
+        do {
+          revealedDoor = Math.floor(Math.random() * 3);
+        } while (revealedDoor === carDoor || revealedDoor === initialChoice);
+
+        // Contestant's final choice if they switch
+        let switchChoice;
+        do {
+          switchChoice = Math.floor(Math.random() * 3);
+        } while (switchChoice === initialChoice || switchChoice === revealedDoor);
+
+        // Check if switching wins or staying wins
+        if (switchChoice === carDoor) {
+          switchWins++;
+        } else if (initialChoice === carDoor) {
+          stayWins++;
+        }
+
+        // Calculate the probabilities
+        const switchWinPercentage = (switchWins / (i + 1)) * 100;
+        const stayWinPercentage = (stayWins / (i + 1)) * 100;
+
+        // Store the probabilities
+        probabilitiesSwitching.push(switchWinPercentage.toFixed(2));
+        probabilitiesStaying.push(stayWinPercentage.toFixed(2));
+
+        // Update the chart data
+        chart.data.labels.push(i + 1);
+        chart.data.datasets[0].data.push(switchWinPercentage.toFixed(2));
+        chart.data.datasets[1].data.push(stayWinPercentage.toFixed(2));
+        chart.update();
+        await new Promise(resolve => setTimeout(resolve, 5));
+      }
+    }
+
+    // Reset button event listener
+    const resetBtn = document.getElementById('resetBtn');
+    resetBtn.addEventListener('click', () => {
+      // Clear the chart data
+      i=0;
+      switchWins = 0;
+      stayWins = 0;
+      probabilitiesSwitching = [];
+      probabilitiesStaying = [];
+      chart.data.labels = [];
+      chart.data.datasets[0].data = [];
+      chart.data.datasets[1].data = [];
+      chart.update();
+     
+    });
+
+    // Run the simulation with 1000 iterations
+    simulateMontyHallRealTime(1000);
+  </script>
+</body>
+</html>
